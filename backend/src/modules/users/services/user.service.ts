@@ -1,6 +1,7 @@
 import { UserRepository, IUserRepository } from "../repositories/user.repository";
 import { CreateUserDto, UpdateUserDto, UserQueryDto, ChangePasswordDto, UserResponseDto } from "../dto/user.dto";
 import { User } from "../entities/user.entity";
+import { generateToken } from "../../../shared/middlewares/auth.middleware";
 import * as bcrypt from "bcrypt";
 
 export interface IUserService {
@@ -12,7 +13,7 @@ export interface IUserService {
   deleteUser(id: string): Promise<void>;
   changePassword(id: string, passwordData: ChangePasswordDto): Promise<void>;
   verifyEmail(id: string): Promise<void>;
-  authenticateUser(email: string, password: string): Promise<UserResponseDto>;
+  authenticateUser(email: string, password: string): Promise<{ user: UserResponseDto; token: string }>;
   getUserStats(): Promise<{ totalActive: number; recentUsers: number; verifiedUsers: number }>;
 }
 
@@ -211,7 +212,7 @@ export class UserService implements IUserService {
   /**
    * Autenticar usuario (login)
    */
-  async authenticateUser(email: string, password: string): Promise<UserResponseDto> {
+  async authenticateUser(email: string, password: string): Promise<{ user: UserResponseDto; token: string }> {
     const user = await this.userRepository.findByEmailWithPassword(email);
     if (!user) {
       throw new Error("Invalid email or password");
@@ -229,7 +230,16 @@ export class UserService implements IUserService {
     // Actualizar último login
     await this.userRepository.updateLastLogin(user.id);
 
-    return this.mapToResponseDto(user);
+    // Generar token JWT
+    const token = generateToken({
+      userId: user.id,
+      email: user.email
+    });
+
+    return {
+      user: this.mapToResponseDto(user),
+      token
+    };
   }
 
   /**

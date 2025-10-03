@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { UserController } from "../controllers/user.controller";
+import { authenticateToken, requireOwnership } from "../../../shared/middlewares/auth.middleware";
 
 const router = Router();
 const userController = new UserController();
@@ -31,55 +32,55 @@ router.post("/", userController.createUser);
  * @desc Obtener todos los usuarios con filtros y paginación
  * @access Private
  */
-router.get("/", userController.getAllUsers);
+router.get("/", authenticateToken, userController.getAllUsers);
 
 /**
  * @route GET /api/users/stats
  * @desc Obtener estadísticas de usuarios
  * @access Private (Admin)
  */
-router.get("/stats", userController.getUserStats);
+router.get("/stats", authenticateToken, userController.getUserStats);
 
 /**
  * @route GET /api/users/:id
  * @desc Obtener usuario por ID
  * @access Private
  */
-router.get("/:id", userController.getUserById);
+router.get("/:id", authenticateToken, userController.getUserById);
 
 /**
  * @route GET /api/users/profile/:id
  * @desc Obtener perfil completo del usuario
- * @access Private
+ * @access Private - Solo el propietario puede acceder
  */
-router.get("/profile/:id", userController.getUserProfile);
+router.get("/profile/:id", authenticateToken, requireOwnership(), userController.getUserProfile);
 
 /**
  * @route PUT /api/users/:id
  * @desc Actualizar usuario
- * @access Private
+ * @access Private - Solo el propietario puede actualizar
  */
-router.put("/:id", userController.updateUser);
+router.put("/:id", authenticateToken, requireOwnership(), userController.updateUser);
 
 /**
  * @route PUT /api/users/:id/password
  * @desc Cambiar contraseña del usuario
- * @access Private
+ * @access Private - Solo el propietario puede cambiar su contraseña
  */
-router.put("/:id/password", userController.changePassword);
+router.put("/:id/password", authenticateToken, requireOwnership(), userController.changePassword);
 
 /**
  * @route PUT /api/users/:id/verify-email
  * @desc Verificar email del usuario
- * @access Private
+ * @access Private - Solo el propietario puede verificar su email
  */
-router.put("/:id/verify-email", userController.verifyEmail);
+router.put("/:id/verify-email", authenticateToken, requireOwnership(), userController.verifyEmail);
 
 /**
  * @route DELETE /api/users/:id
  * @desc Eliminar usuario (soft delete)
- * @access Private
+ * @access Private - Solo el propietario puede eliminar su cuenta
  */
-router.delete("/:id", userController.deleteUser);
+router.delete("/:id", authenticateToken, requireOwnership(), userController.deleteUser);
 
 export default router;

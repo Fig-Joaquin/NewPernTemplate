@@ -1,5 +1,6 @@
 import { Router } from "express";
 import userRoutes from "./routes/user.routes";
+import SimpleRegistry from "../../shared/core/simple-registry";
 
 /**
  * Módulo de usuarios
@@ -16,14 +17,24 @@ export class UsersModule {
   constructor() {
     this.router = Router();
     this.initializeRoutes();
+    
+    // 🎯 AUTO-REGISTRO - El módulo se registra automáticamente
+    SimpleRegistry.register({
+      name: "UsersModule",
+      path: "/api/users",
+      router: this.router,
+      version: "1.0.0",
+      description: "Comprehensive user management system",
+      info: UsersModule.getModuleInfo()
+    });
   }
 
   /**
    * Inicializar rutas del módulo
    */
   private initializeRoutes(): void {
-    // Todas las rutas de usuarios estarán bajo /users
-    this.router.use("/users", userRoutes);
+    // Como el path "/api/users" ya está en el registro, aquí usamos "/"
+    this.router.use("/", userRoutes);
   }
 
   /**
@@ -64,3 +75,6 @@ export class UsersModule {
     };
   }
 }
+
+// Auto-instanciar para registrar el módulo
+export const usersModuleInstance = new UsersModule();

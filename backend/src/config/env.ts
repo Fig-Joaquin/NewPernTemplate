@@ -21,8 +21,8 @@ const envSchema = z.object({
   // Opcional
   DATABASE_URL: z.string().optional(),
   
-  // JWT Secret
-  JWT_SECRET: z.string().min(32, "JWT_SECRET must be at least 32 characters").optional(),
+  // JWT Secret (requerido para producción)
+  JWT_SECRET: z.string().min(32, "JWT_SECRET must be at least 32 characters"),
 });
 
 // validación y parseo de las variables de entorno

@@ -1,8 +1,12 @@
 import express, { Application } from "express";
-import { UsersModule } from "./modules/users/users.module";
+import SimpleRegistry from "./shared/core/simple-registry";
 import { errorHandler, notFoundHandler, requestLogger } from "./shared/middlewares/error-handler";
 import { ApiResponse } from "./shared/utils/api-response";
 import { env, isDevelopment } from "./config/env";
+
+// AUTO-IMPORTS - Esto dispara el auto-registro de módulos
+import "./modules/users/users.module";
+import "./modules/auth/auth.module";
 
 const app: Application = express();
 
@@ -47,41 +51,50 @@ if (isDevelopment()) {
 // ROUTES
 // =============================================================================
 
-// Health check route
+// Health check route with dynamic module information
 app.get("/health", (req, res) => {
+  const moduleStats = SimpleRegistry.getStats();
+  
   res.json(
     ApiResponse.success({
       status: "OK",
       timestamp: new Date().toISOString(),
       environment: env.NODE_ENV,
       version: "1.0.0",
-      uptime: process.uptime()
+      uptime: process.uptime(),
+      modules: moduleStats,
+      registry: SimpleRegistry.getSummary()
     }, "Server is healthy")
   );
 });
 
-// Root route
+// Root route with dynamic module information
 app.get("/", (req, res) => {
+  const endpoints = SimpleRegistry.getEndpoints();
+  const moduleDetails = SimpleRegistry.getDetailedInfo();
+
   res.json(
     ApiResponse.success({
-      message: "🚀 PERN API Server",
+      message: "🚀 PERN API Server with Auto-Registry",
       version: "1.0.0",
       environment: env.NODE_ENV,
+      architecture: "Modular with Auto-Discovery",
       endpoints: {
         health: "/health",
-        users: "/api/users",
-        login: "/api/users/login"
+        ...endpoints
       },
-      documentation: "Visit /health for server status"
-    }, "Welcome to PERN API")
+      modules: moduleDetails,
+      documentation: "Visit /health for server status and module information"
+    }, "Welcome to Auto-Registry PERN API")
   );
 });
 
-// Initialize modules
-const usersModule = new UsersModule();
+// =============================================================================
+// MODULE AUTO-LOADING
+// =============================================================================
 
-// API routes
-app.use("/api", usersModule.router);
+// 🎯 UNA SOLA LÍNEA - Carga automáticamente todos los módulos registrados
+SimpleRegistry.applyAll(app);
 
 // =============================================================================
 // ERROR HANDLING
