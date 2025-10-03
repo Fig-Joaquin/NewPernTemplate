@@ -2,7 +2,7 @@ import { z } from "zod";
 
 // Validaciones personalizadas
 const emailSchema = z.string()
-  .email({ message: "Please provide a valid email address" })
+  z.email({ message: "Please provide a valid email address" })
   .max(255, "Email must be less than 255 characters")
   .transform(val => val.toLowerCase().trim());
 
@@ -89,8 +89,8 @@ export type LoginDto = z.infer<typeof LoginSchema>;
 
 // Schema para respuesta de usuario (sin datos sensibles)
 export const UserResponseSchema = z.object({
-  id: z.string().uuid({ message: "Invalid UUID format" }),
-  email: z.string().email({ message: "Invalid email format" }),
+  id: z.uuid({ message: "Invalid UUID format" }),
+  email: z.email({ message: "Invalid email format" }),
   firstName: z.string(),
   lastName: z.string(),
   fullName: z.string(),
